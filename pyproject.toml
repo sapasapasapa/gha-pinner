@@ -1,0 +1,17 @@
+[project]
+name = "src"
+version = "0.1.0"
+description = "A simple tool to pin third-party Github Actions using the commit SHA"
+authors = [
+    {name = "Samuele Pasini",email = "sapa@bendingspoons.com"}
+]
+license = {text = "MIT License"}
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
