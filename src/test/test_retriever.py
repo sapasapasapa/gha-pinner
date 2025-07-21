@@ -168,7 +168,6 @@ def test_get_action_sha(test_params: GetActionShaParams) -> None:
         patch(
             "src.retriever._get_latest_release_tag", return_value=test_params.latest_tag
         ),
-        patch("src.retriever._print_pinned_action") as mock_print,
     ):
         # Call the function
         result = get_action_sha(test_params.action)
@@ -181,9 +180,7 @@ def test_get_action_sha(test_params: GetActionShaParams) -> None:
             assert result is None
         # For successful API call
         elif test_params.mock_status_code == 200 and not test_params.expected_exception:
-            mock_print.assert_called_once_with(
-                test_params.action, test_params.mock_response.get("sha")
-            )
+            assert result == test_params.mock_response.get("sha")
         # For failed API call
         else:
             assert result is None

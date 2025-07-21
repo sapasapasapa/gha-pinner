@@ -13,7 +13,8 @@ from common.constants import (
     VERSION,
     VERSION_ARG_HELP,
 )
-from retriever import get_action_sha
+from retriever import get_action_sha, print_pinned_action
+from editor import pin_action_in_file
 
 
 def parse_args(args=None) -> Namespace:
@@ -41,9 +42,10 @@ def main() -> None:
 
     # Get and display the SHA for the specified action
     if args.action:
-        get_action_sha(args.action)
+        sha: str = get_action_sha(args.action)
+        print_pinned_action(args.action, sha)
     elif args.file:
-        pass
+        pin_action_in_file(args.file)
     else:
         # No action specified, show help
         print(NO_ACTION_ERROR)

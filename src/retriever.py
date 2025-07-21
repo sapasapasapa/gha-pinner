@@ -28,12 +28,6 @@ def _parse_action(action: str) -> tuple[str, str, str]:
     return matched.groups()
 
 
-def _print_pinned_action(action: str, sha: str) -> None:
-    """Print the pinned action"""
-    print(ORIGINAL_ACTION_FORMAT.format(action))
-    print(PINNED_ACTION_FORMAT.format(action.split("@")[0], sha))
-
-
 def _get_latest_release_tag(owner: str, repo: str) -> Optional[str]:
     """Get the latest release tag for a repository"""
     api_url: str = GITHUB_API_RELEASES_URL.format(owner, repo)
@@ -48,7 +42,7 @@ def _get_latest_release_tag(owner: str, repo: str) -> Optional[str]:
         return None
 
 
-def get_action_sha(action: str) -> None:
+def get_action_sha(action: str) -> str:
     """Retrieve the commit SHA for a GitHub Action."""
 
     owner, repo, ref = _parse_action(action)
@@ -70,7 +64,12 @@ def get_action_sha(action: str) -> None:
         response: Response = requests.get(api_url)
         response.raise_for_status()
         data: dict[str, Any] = response.json()
-        _print_pinned_action(action, data.get("sha"))
+        return data.get("sha")
     except requests.exceptions.RequestException as e:
         print(ERROR_RETRIEVING_SHA.format(action, e))
         return None
+
+def print_pinned_action(action: str, sha: str) -> None:
+    """Print the pinned action"""
+    print(ORIGINAL_ACTION_FORMAT.format(action))
+    print(PINNED_ACTION_FORMAT.format(action.split("@")[0], sha))
