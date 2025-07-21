@@ -1,0 +1,4 @@
+- [ ] Integration test
+- [ ] Check private action support
+- [ ] Distribute with pypi and brew
+- [ ] Update docs

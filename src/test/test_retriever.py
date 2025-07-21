@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-from src.retriever import get_latest_release_tag, _parse_action, get_action_sha
+from src.retriever import _parse_action, get_action_sha, get_latest_release_tag
 
 
 @dataclass(frozen=True)

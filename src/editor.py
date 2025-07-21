@@ -1,13 +1,12 @@
 import os
 import re
-from typing import Optional, Match
 
-from retriever import get_action_sha, print_pinned_action, get_latest_release_tag
+from retriever import get_action_sha, get_latest_release_tag
 
 
 def _is_sha_reference(ref: str) -> bool:
     """Check if the reference is already a SHA (40 hex characters)"""
-    return bool(re.match(r'^[0-9a-f]{40}$', ref))
+    return bool(re.match(r"^[0-9a-f]{40}$", ref))
 
 
 def _pin_actions_in_workflow_content(content: str) -> str:
@@ -19,46 +18,48 @@ def _pin_actions_in_workflow_content(content: str) -> str:
     def replace_action(match):
         indent = match.group(1)
         action = match.group(2)
-            
+
         # Try to parse the action reference
         try:
             # For GitHub actions in the format owner/repo@ref
             if "@" in action and "/" in action:
                 action_base, ref = action.rsplit("@", 1)
-                
+
                 # Skip if already pinned with SHA
                 if _is_sha_reference(ref):
                     return match.group(0)
-                
+
                 # Store the original ref for comment
                 original_ref = ref
-                
+
                 # If the reference is 'latest', get the actual latest version tag
                 if ref == "latest":
                     # Parse the owner and repo from the action
-                    parts = action_base.split('/')
+                    parts = action_base.split("/")
                     if len(parts) >= 2:
                         owner = parts[-2]
                         repo = parts[-1]
                         latest_tag = get_latest_release_tag(owner, repo)
                         if latest_tag:
                             original_ref = f"latest ({latest_tag})"
-                
+
                 sha = get_action_sha(action)
-                
+
                 if sha:
                     # Replace the reference with the SHA and append the original version as a comment
                     return f"{indent}{action_base}@{sha} # {original_ref}"
                 else:
                     # If we couldn't get the SHA, it might be a private action or there was an error
                     # Keep the original and print a message
-                    print(f"Skipping action '{action}': Unable to retrieve SHA (might be private or invalid)")
+                    print(
+                        f"Skipping action '{action}': Unable to retrieve SHA (might be private or invalid)"
+                    )
                     return match.group(0)
         except Exception as e:
             # If any error occurs during parsing, keep the original
             print(f"Error parsing action '{action}': {e}")
             pass
-            
+
         # If the action format is not supported, keep the original
         return match.group(0)
 

@@ -69,7 +69,7 @@ def get_action_sha(action: str) -> Optional[str]:
     except requests.exceptions.HTTPError as e:
         # Handle 404 errors (private or invalid actions)
         try:
-            if hasattr(e, 'response') and e.response and e.response.status_code == 404:
+            if hasattr(e, "response") and e.response and e.response.status_code == 404:
                 print(PRIVATE_OR_INVALID_ACTION_ERROR.format(action))
         except AttributeError:
             print(ERROR_RETRIEVING_SHA.format(action, e))
