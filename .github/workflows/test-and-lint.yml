@@ -8,7 +8,7 @@ on:
   workflow_dispatch: 
 
 jobs:
-  test:
+  test-and-lint:
     runs-on: ubuntu-latest
     
     steps:
@@ -34,3 +34,10 @@ jobs:
     - name: Run tests
       run: |
         poetry run pytest src/test -v 
+  
+    - name: Check code formatting and imports
+      run: |
+        poetry run ruff format .
+        poetry run ruff check --fix
+        poetry run ruff check --select I --fix
+        git diff --exit-code 

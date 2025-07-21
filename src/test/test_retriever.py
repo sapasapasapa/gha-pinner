@@ -8,17 +8,17 @@ from src.retriever import _parse_action, get_action_sha
 
 
 @dataclass(frozen=True)
-class TestParseAction:
+class ParseActionParams:
     action: str
     expected_result: tuple[str, str, str]
 
 
-VALID_ACTION = TestParseAction(
+VALID_ACTION = ParseActionParams(
     action="actions/checkout@v3",
     expected_result=("actions", "checkout", "v3"),
 )
 
-INVALID_ACTION = TestParseAction(
+INVALID_ACTION = ParseActionParams(
     action="actions/checkout",
     expected_result=("", "", ""),
 )
@@ -31,13 +31,13 @@ INVALID_ACTION = TestParseAction(
         INVALID_ACTION,
     ],
 )
-def test_parse_action(test_params: TestParseAction) -> None:
+def test_parse_action(test_params: ParseActionParams) -> None:
     result = _parse_action(test_params.action)
     assert result == test_params.expected_result
 
 
 @dataclass(frozen=True)
-class TestGetActionSha:
+class GetActionShaParams:
     action: str
     mock_response: dict
     mock_status_code: int
@@ -45,14 +45,14 @@ class TestGetActionSha:
     expected_exception: bool = False
 
 
-SUCCESSFUL_ACTION = TestGetActionSha(
+SUCCESSFUL_ACTION = GetActionShaParams(
     action="actions/checkout@v3",
     mock_response={"sha": "abc123def456"},
     mock_status_code=200,
     parse_result=("actions", "checkout", "v3"),
 )
 
-FAILED_ACTION = TestGetActionSha(
+FAILED_ACTION = GetActionShaParams(
     action="actions/checkout@v3",
     mock_response={"message": "Not Found"},
     mock_status_code=404,
@@ -60,7 +60,7 @@ FAILED_ACTION = TestGetActionSha(
     expected_exception=True,
 )
 
-INVALID_ACTION_FORMAT = TestGetActionSha(
+INVALID_ACTION_FORMAT = GetActionShaParams(
     action="actions/checkout",
     mock_response={},
     mock_status_code=200,
@@ -76,7 +76,7 @@ INVALID_ACTION_FORMAT = TestGetActionSha(
         INVALID_ACTION_FORMAT,
     ],
 )
-def test_get_action_sha(test_params: TestGetActionSha) -> None:
+def test_get_action_sha(test_params: GetActionShaParams) -> None:
     # Create mock response
     mock_response = Mock()
     mock_response.status_code = test_params.mock_status_code
