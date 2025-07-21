@@ -1,17 +1,23 @@
-[project]
-name = "src"
+[tool.poetry]
+name = "gha-pinner"
 version = "0.1.0"
-description = "A simple tool to pin third-party Github Actions using the commit SHA"
-authors = [
-    {name = "Samuele Pasini",email = "sapa@bendingspoons.com"}
-]
-license = {text = "MIT License"}
+description = "Pin GitHub Actions to specific commit SHAs for improved security"
+authors = ["Samuele Pasini <sapa@bendingspoons.com>"]
+license = "MIT"
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-]
+packages = [{include = "src"}]
 
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "^2.31.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0.0"
+ruff = "^0.12.4"
+
+[tool.poetry.scripts]
+gha-pinner = "src.main:main"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

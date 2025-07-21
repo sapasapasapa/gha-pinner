@@ -1,0 +1,50 @@
+from argparse import Namespace
+from dataclasses import dataclass
+
+import pytest
+from src.main import parse_args
+
+
+@dataclass(frozen=True)
+class TestParseArgs:
+    args: list[str]
+    expected_result: list[bool]
+
+
+ACTION_FLAG = TestParseArgs(
+    args=["-a", "actions/checkout@v3"],
+    expected_result=Namespace(action="actions/checkout@v3", file=None, version=False),
+)
+ACTION_LONG_FLAG = TestParseArgs(
+    args=["--action", "actions/checkout@v3"],
+    expected_result=Namespace(action="actions/checkout@v3", file=None, version=False),
+)
+FILE_FLAG = TestParseArgs(
+    args=["-f", "path/to/file.yml"],
+    expected_result=Namespace(action=None, file="path/to/file.yml", version=False),
+)
+FILE_LONG_FLAG = TestParseArgs(
+    args=["--file", "path/to/file.yml"],
+    expected_result=Namespace(action=None, file="path/to/file.yml", version=False),
+)
+VERSION_FLAG = TestParseArgs(
+    args=["-v"], expected_result=Namespace(action=None, file=None, version=True)
+)
+VERSION_LONG_FLAG = TestParseArgs(
+    args=["--version"], expected_result=Namespace(action=None, file=None, version=True)
+)
+
+
+@pytest.mark.parametrize(
+    "test_args",
+    [
+        ACTION_FLAG,
+        ACTION_LONG_FLAG,
+        FILE_FLAG,
+        FILE_LONG_FLAG,
+        VERSION_FLAG,
+        VERSION_LONG_FLAG,
+    ],
+)
+def test_parse_args(test_args: TestParseArgs) -> None:
+    assert parse_args(test_args.args) == test_args.expected_result
