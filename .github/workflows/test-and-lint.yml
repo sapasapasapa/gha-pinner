@@ -1,0 +1,69 @@
+name: Test and Lint
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch: 
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      src-changed: ${{ steps.check-src-changes.outputs.changed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Check for changes in src directory
+        id: check-src-changes
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # For pull requests, compare with the base branch
+            git fetch origin ${{ github.base_ref }}
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}..HEAD | grep -q "^src/" && echo "true" || echo "false")
+          else
+            # For pushes, compare with the previous commit
+            git fetch origin ${{ github.event.before || 'HEAD~1' }}
+            CHANGED=$(git diff --name-only ${{ github.event.before || 'HEAD~1' }}..HEAD | grep -q "^src/" && echo "true" || echo "false")
+          fi
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+
+  test-and-lint:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.src-changed == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.5.1
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        
+    - name: Install dependencies
+      run: |
+        poetry install --no-interaction
+        
+    - name: Run tests
+      run: |
+        poetry run pytest src/test -v 
+  
+    - name: Check code formatting and imports
+      run: |
+        poetry run ruff format .
+        poetry run ruff check --fix
+        poetry run ruff check --select I --fix
+        git diff --exit-code 
