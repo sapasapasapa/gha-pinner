@@ -28,7 +28,7 @@ def _parse_action(action: str) -> tuple[str, str, str]:
     return matched.groups()
 
 
-def _get_latest_release_tag(owner: str, repo: str) -> Optional[str]:
+def get_latest_release_tag(owner: str, repo: str) -> Optional[str]:
     """Get the latest release tag for a repository"""
     api_url: str = GITHUB_API_RELEASES_URL.format(owner, repo)
 
@@ -52,7 +52,7 @@ def get_action_sha(action: str) -> str:
 
     # Handle @latest tag by fetching the latest release tag
     if ref == "latest":
-        latest_tag = _get_latest_release_tag(owner, repo)
+        latest_tag = get_latest_release_tag(owner, repo)
         if not latest_tag:
             return None
         ref = latest_tag
@@ -68,6 +68,7 @@ def get_action_sha(action: str) -> str:
     except requests.exceptions.RequestException as e:
         print(ERROR_RETRIEVING_SHA.format(action, e))
         return None
+
 
 def print_pinned_action(action: str, sha: str) -> None:
     """Print the pinned action"""

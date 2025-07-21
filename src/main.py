@@ -13,8 +13,8 @@ from common.constants import (
     VERSION,
     VERSION_ARG_HELP,
 )
-from retriever import get_action_sha, print_pinned_action
 from editor import pin_action_in_file
+from retriever import get_action_sha, print_pinned_action
 
 
 def parse_args(args=None) -> Namespace:

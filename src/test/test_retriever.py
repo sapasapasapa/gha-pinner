@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-from src.retriever import _get_latest_release_tag, _parse_action, get_action_sha
+from src.retriever import get_latest_release_tag, _parse_action, get_action_sha
 
 
 @dataclass(frozen=True)
@@ -89,7 +89,7 @@ def test_get_latest_release_tag(test_params: GetLatestReleaseParams) -> None:
     # Mock the requests.get method
     with patch("src.retriever.requests.get", return_value=mock_response):
         # Call the function
-        result = _get_latest_release_tag(test_params.owner, test_params.repo)
+        result = get_latest_release_tag(test_params.owner, test_params.repo)
         assert result == test_params.expected_result
 
 
