@@ -2,6 +2,7 @@ from argparse import Namespace
 from dataclasses import dataclass
 
 import pytest
+
 from src.main import parse_args
 
 
@@ -38,6 +39,7 @@ MULTIPLE_FLAGS = TestParseArgs(
     expected_result=Namespace(action="actions/checkout@v3", file=None, version=True),
 )
 
+
 @pytest.mark.parametrize(
     "test_args",
     [
@@ -54,6 +56,3 @@ def test_parse_args(test_args: TestParseArgs) -> None:
     result = parse_args(test_args.args)
     assert not (result.action is not None and result.file is not None)
     assert result == test_args.expected_result
-    
-
-
