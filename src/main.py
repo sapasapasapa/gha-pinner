@@ -33,7 +33,6 @@ def parse_args(args=None) -> Namespace:
 
 def main() -> None:
     args: Namespace = parse_args()
-    print(args)
 
     # Handle version flag
     if args.version:
