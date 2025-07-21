@@ -14,6 +14,7 @@ from common.constants import (
     INVALID_ACTION_FORMAT_ERROR,
     ORIGINAL_ACTION_FORMAT,
     PINNED_ACTION_FORMAT,
+    PRIVATE_OR_INVALID_ACTION_ERROR,
 )
 
 
@@ -42,7 +43,7 @@ def get_latest_release_tag(owner: str, repo: str) -> Optional[str]:
         return None
 
 
-def get_action_sha(action: str) -> str:
+def get_action_sha(action: str) -> Optional[str]:
     """Retrieve the commit SHA for a GitHub Action."""
 
     owner, repo, ref = _parse_action(action)
@@ -65,6 +66,14 @@ def get_action_sha(action: str) -> str:
         response.raise_for_status()
         data: dict[str, Any] = response.json()
         return data.get("sha")
+    except requests.exceptions.HTTPError as e:
+        # Handle 404 errors (private or invalid actions)
+        try:
+            if hasattr(e, 'response') and e.response and e.response.status_code == 404:
+                print(PRIVATE_OR_INVALID_ACTION_ERROR.format(action))
+        except AttributeError:
+            print(ERROR_RETRIEVING_SHA.format(action, e))
+        return None
     except requests.exceptions.RequestException as e:
         print(ERROR_RETRIEVING_SHA.format(action, e))
         return None
@@ -73,4 +82,7 @@ def get_action_sha(action: str) -> str:
 def print_pinned_action(action: str, sha: str) -> None:
     """Print the pinned action"""
     print(ORIGINAL_ACTION_FORMAT.format(action))
-    print(PINNED_ACTION_FORMAT.format(action.split("@")[0], sha))
+    if sha:
+        print(PINNED_ACTION_FORMAT.format(action.split("@")[0], sha))
+    else:
+        print(f"Unable to pin action: {action} (might be private or invalid)")

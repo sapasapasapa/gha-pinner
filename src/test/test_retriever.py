@@ -161,12 +161,12 @@ def test_get_action_sha(test_params: GetActionShaParams) -> None:
     if test_params.expected_exception:
         mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError()
 
-    # Mock the requests.get method, _parse_action, and _get_latest_release_tag
+    # Mock the requests.get method, _parse_action, and get_latest_release_tag
     with (
         patch("src.retriever.requests.get", return_value=mock_response),
         patch("src.retriever._parse_action", return_value=test_params.parse_result),
         patch(
-            "src.retriever._get_latest_release_tag", return_value=test_params.latest_tag
+            "src.retriever.get_latest_release_tag", return_value=test_params.latest_tag
         ),
     ):
         # Call the function
