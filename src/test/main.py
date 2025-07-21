@@ -33,7 +33,10 @@ VERSION_FLAG = TestParseArgs(
 VERSION_LONG_FLAG = TestParseArgs(
     args=["--version"], expected_result=Namespace(action=None, file=None, version=True)
 )
-
+MULTIPLE_FLAGS = TestParseArgs(
+    args=["-a", "actions/checkout@v3", "-v"],
+    expected_result=Namespace(action="actions/checkout@v3", file=None, version=True),
+)
 
 @pytest.mark.parametrize(
     "test_args",
@@ -44,7 +47,13 @@ VERSION_LONG_FLAG = TestParseArgs(
         FILE_LONG_FLAG,
         VERSION_FLAG,
         VERSION_LONG_FLAG,
+        MULTIPLE_FLAGS,
     ],
 )
 def test_parse_args(test_args: TestParseArgs) -> None:
-    assert parse_args(test_args.args) == test_args.expected_result
+    result = parse_args(test_args.args)
+    assert not (result.action is not None and result.file is not None)
+    assert result == test_args.expected_result
+    
+
+

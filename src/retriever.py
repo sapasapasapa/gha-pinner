@@ -21,7 +21,7 @@ def _parse_action(action: str) -> tuple[str, str, str]:
     if not matched:
         print(INVALID_ACTION_FORMAT_ERROR.format(action))
         print(EXPECTED_FORMAT_MESSAGE)
-        return None
+        return ("", "", "")
 
     return matched.groups()
 
@@ -36,6 +36,9 @@ def get_action_sha(action: str) -> None:
     """Retrieve the commit SHA for a GitHub Action."""
 
     owner, repo, ref = _parse_action(action)
+
+    if owner == "" or repo == "" or ref == "":
+        return None
 
     # GitHub API URL to get the commit SHA
     api_url: str = GITHUB_API_COMMITS_URL.format(owner, repo, ref)

@@ -19,10 +19,12 @@ from retriever import get_action_sha
 def parse_args(args=None) -> Namespace:
     parser = ArgumentParser(description=PROGRAM_DESCRIPTION)
 
-    # Add arguments with flags
-    parser.add_argument("-a", "--action", help=ACTION_ARG_HELP, required=False)
-
-    parser.add_argument("-f", "--file", help=FILE_ARG_HELP, required=False)
+    # Create a mutually exclusive group for action arguments
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-a", dest="action", help=ACTION_ARG_HELP, required=False)
+    group.add_argument("--action", dest="action", help=ACTION_ARG_HELP, required=False)
+    group.add_argument("-f", dest="file", help=FILE_ARG_HELP, required=False)
+    group.add_argument("--file", dest="file", help=FILE_ARG_HELP, required=False)
 
     parser.add_argument("-v", "--version", help=VERSION_ARG_HELP, action="store_true")
 
@@ -34,16 +36,13 @@ def main() -> None:
     print(args)
 
     # Handle version flag
-    if args.version:  # args[2] is has_version
+    if args.version:
         print(f"{PROGRAM_NAME} {VERSION}")
         sys.exit(0)
 
     # Get and display the SHA for the specified action
-    if args.action:  # args[0] is has_action
-        # Extract the actual action from sys.argv
-        action_index: int = sys.argv.index("-a" if "-a" in sys.argv else "--action") + 1
-        action: str = sys.argv[action_index]
-        get_action_sha(action)
+    if args.action:
+        get_action_sha(args.action)
     elif args.file:
         pass
     else:
