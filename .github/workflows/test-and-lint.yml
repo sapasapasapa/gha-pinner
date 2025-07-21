@@ -11,7 +11,7 @@ jobs:
   check-changes:
     runs-on: ubuntu-latest
     outputs:
-      src-changed: ${{ steps.filter.outputs.src }}
+      src-changed: ${{ steps.check-src-changes.outputs.changed }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -19,12 +19,18 @@ jobs:
           fetch-depth: 0
 
       - name: Check for changes in src directory
-        uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
-            src:
-              - 'src/**'
+        id: check-src-changes
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # For pull requests, compare with the base branch
+            git fetch origin ${{ github.base_ref }}
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}..HEAD | grep -q "^src/" && echo "true" || echo "false")
+          else
+            # For pushes, compare with the previous commit
+            git fetch origin ${{ github.event.before || 'HEAD~1' }}
+            CHANGED=$(git diff --name-only ${{ github.event.before || 'HEAD~1' }}..HEAD | grep -q "^src/" && echo "true" || echo "false")
+          fi
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
 
   test-and-lint:
     needs: check-changes
