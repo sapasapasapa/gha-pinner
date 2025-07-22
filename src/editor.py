@@ -2,18 +2,42 @@ import os
 import re
 
 from retriever import get_action_sha, get_latest_release_tag
+from common.constants import (
+    SHA_REGEX_PATTERN,
+    WORKFLOW_FILE_EXTENSIONS,
+    WORKFLOW_ACTION_PATTERN,
+    FILE_NOT_FOUND_ERROR,
+    NOT_WORKFLOW_FILE_ERROR,
+    ERROR_PROCESSING_FILE,
+    ACTION_SKIP_ERROR,
+    ACTION_PARSING_ERROR,
+    SUCCESS_PIN_MESSAGE,
+)
 
 
 def _is_sha_reference(ref: str) -> bool:
     """Check if the reference is already a SHA (40 hex characters)"""
-    return bool(re.match(r"^[0-9a-f]{40}$", ref))
+    return bool(re.match(SHA_REGEX_PATTERN, ref))
+
+
+def _is_github_workflow_file(file: str) -> bool:
+    """Check if the file is a GitHub workflow file (yaml/yml with GitHub Actions content).
+    For now, we only support yml and yaml files.
+    
+    Args:
+        file: Path to the file to check
+        
+    Returns:
+        bool: True if the file is a GitHub workflow file, False otherwise
+    """
+    return file.lower().endswith(WORKFLOW_FILE_EXTENSIONS)
 
 
 def _pin_actions_in_workflow_content(content: str) -> str:
     """Pin actions in the workflow content"""
     # Find all actions in the format 'uses: owner/repo@ref' or other valid formats
     # This pattern handles standard actions, actions with organization, and docker actions
-    pattern = r"(\s+uses:\s+)([^\s]+)"
+    pattern = WORKFLOW_ACTION_PATTERN
 
     def replace_action(match):
         indent = match.group(1)
@@ -51,13 +75,11 @@ def _pin_actions_in_workflow_content(content: str) -> str:
                 else:
                     # If we couldn't get the SHA, it might be a private action or there was an error
                     # Keep the original and print a message
-                    print(
-                        f"Skipping action '{action}': Unable to retrieve SHA (might be private or invalid)"
-                    )
+                    print(ACTION_SKIP_ERROR.format(action))
                     return match.group(0)
         except Exception as e:
             # If any error occurs during parsing, keep the original
-            print(f"Error parsing action '{action}': {e}")
+            print(ACTION_PARSING_ERROR.format(action, e))
             pass
 
         # If the action format is not supported, keep the original
@@ -74,7 +96,11 @@ def pin_action_in_file(file: str) -> None:
         file: Path to the GitHub Action workflow file
     """
     if not os.path.exists(file):
-        print(f"Error: File '{file}' does not exist.")
+        print(FILE_NOT_FOUND_ERROR.format(file))
+        return
+
+    if not _is_github_workflow_file(file):
+        print(NOT_WORKFLOW_FILE_ERROR.format(file))
         return
 
     try:
@@ -89,7 +115,7 @@ def pin_action_in_file(file: str) -> None:
         with open(file, "w") as f:
             f.write(updated_content)
 
-        print(f"Successfully pinned actions in '{file}'")
+        print(SUCCESS_PIN_MESSAGE.format(file))
 
     except Exception as e:
-        print(f"Error processing file '{file}': {e}")
+        print(ERROR_PROCESSING_FILE.format(file, e))

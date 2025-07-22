@@ -15,6 +15,7 @@ from common.constants import (
     ORIGINAL_ACTION_FORMAT,
     PINNED_ACTION_FORMAT,
     PRIVATE_OR_INVALID_ACTION_ERROR,
+    UNABLE_TO_PIN_ACTION,
 )
 
 
@@ -85,4 +86,4 @@ def print_pinned_action(action: str, sha: str) -> None:
     if sha:
         print(PINNED_ACTION_FORMAT.format(action.split("@")[0], sha))
     else:
-        print(f"Unable to pin action: {action} (might be private or invalid)")
+        print(UNABLE_TO_PIN_ACTION.format(action))

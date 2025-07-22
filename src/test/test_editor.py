@@ -5,6 +5,7 @@ import pytest
 
 from src.editor import (
     _is_sha_reference,
+    _is_github_workflow_file,
     _pin_actions_in_workflow_content,
     pin_action_in_file,
 )
@@ -252,3 +253,31 @@ def test_pin_action_in_file_exception() -> None:
         mock_print.assert_called_once_with(
             "Error processing file 'workflow.yml': Test exception"
         )
+
+
+@dataclass(frozen=True)
+class IsGithubWorkflowFileParams:
+    file: str
+    expected_result: bool
+
+
+@pytest.mark.parametrize(
+    "file,expected",
+    [
+        ("workflow.yml", True),
+        ("workflow.yaml", True),
+        ("WORKFLOW.YML", True),
+        ("WORKFLOW.YAML", True),
+        ("workflow.txt", False),
+        ("workflow.md", False),
+        ("workflow", False),
+        ("/path/to/workflow.yml", True),
+        ("/path/to/workflow.yaml", True),
+        ("/path/to/workflow.txt", False),
+        ("", False),
+    ],
+)
+def test_is_github_workflow_file(file: str, expected: bool) -> None:
+    """Test the _is_github_workflow_file function with various file paths."""
+    result = _is_github_workflow_file(file)
+    assert result == expected
