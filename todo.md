@@ -2,3 +2,4 @@
 - [ ] Check private action support
 - [ ] Distribute with pypi and brew
 - [ ] Update docs
+- [ ] Checks on file (is it a .yml, is it valid github action declaration?)

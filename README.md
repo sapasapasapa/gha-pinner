@@ -1,5 +1,7 @@
 # 📌 gha-pinner
 
+![gha-pinner logo](./.github/images/gha-pinner.png)
+
 ## 🤔 Why should you pin your GitHub Actions?
 
 Pinning your GitHub Actions to a specific commit SHA is a critical security best practice. Here's why:
