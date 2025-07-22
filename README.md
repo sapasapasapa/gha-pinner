@@ -4,6 +4,7 @@
 
 - [🤔 Why should you pin your GitHub Actions?](#-why-should-you-pin-your-github-actions)
 - [🚀 What does `gha-pinner` do?](#-what-does-gha-pinner-do)
+- [📦 Installation](#-installation)
 - [🛠️ Usage](#️-usage)
 
 ## 🤔 Why should you pin your GitHub Actions?
@@ -28,6 +29,14 @@ Given a GitHub Action in the format `owner/repo@ref` (where `ref` can be a branc
 For example, if you provide `actions/checkout@v3`, `gha-pinner` will resolve `v3` to the latest commit SHA in the `v3` tag and provide you with `actions/checkout@<commit_sha>`.
 
 It can also update all actions in a workflow file in place.
+
+## 📦 Installation
+
+You can install `gha-pinner` using pip:
+
+```bash
+pip install gha-pinner
+```
 
 ## 🛠️ Usage
 

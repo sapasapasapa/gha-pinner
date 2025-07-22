@@ -4,7 +4,7 @@ from typing import Any, Optional
 import requests
 from requests import Response
 
-from common.constants import (
+from src.common.constants import (
     ACTION_REGEX_PATTERN,
     ERROR_RETRIEVING_LATEST_RELEASE,
     ERROR_RETRIEVING_SHA,
@@ -33,13 +33,12 @@ def _parse_action(action: str) -> tuple[str, str, str]:
 def get_latest_release_tag(owner: str, repo: str) -> Optional[str]:
     """Get the latest release tag for a repository"""
     api_url: str = GITHUB_API_RELEASES_URL.format(owner, repo)
-
     try:
         response: Response = requests.get(api_url)
         response.raise_for_status()
         data: dict[str, Any] = response.json()
         return data.get("tag_name")
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         print(ERROR_RETRIEVING_LATEST_RELEASE.format(owner, repo, e))
         return None
 
@@ -80,10 +79,11 @@ def get_action_sha(action: str) -> Optional[str]:
         return None
 
 
-def print_pinned_action(action: str, sha: str) -> None:
+def print_pinned_action(action: str, sha: Optional[str]) -> None:
     """Print the pinned action"""
-    print(ORIGINAL_ACTION_FORMAT.format(action))
     if sha:
-        print(PINNED_ACTION_FORMAT.format(action.split("@")[0], sha))
+        owner, repo, ref = _parse_action(action)
+        print(ORIGINAL_ACTION_FORMAT.format(action))
+        print(PINNED_ACTION_FORMAT.format(f"{owner}/{repo}", sha))
     else:
         print(UNABLE_TO_PIN_ACTION.format(action))

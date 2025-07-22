@@ -1,1 +1,0 @@
-- [ ] Distribute with pypi and brew
