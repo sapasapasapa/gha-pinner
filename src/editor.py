@@ -1,7 +1,7 @@
 import os
 import re
 
-from common.constants import (
+from src.common.constants import (
     ACTION_PARSING_ERROR,
     ACTION_SKIP_ERROR,
     ERROR_PROCESSING_FILE,
@@ -12,7 +12,7 @@ from common.constants import (
     WORKFLOW_ACTION_PATTERN,
     WORKFLOW_FILE_EXTENSIONS,
 )
-from retriever import get_action_sha, get_latest_release_tag
+from src.retriever import get_action_sha, get_latest_release_tag
 
 
 def _is_sha_reference(ref: str) -> bool:
@@ -21,16 +21,18 @@ def _is_sha_reference(ref: str) -> bool:
 
 
 def _is_github_workflow_file(file: str) -> bool:
-    """Check if the file is a GitHub workflow file (yaml/yml with GitHub Actions content).
-    For now, we only support yml and yaml files.
+    """Check if the file is a GitHub workflow file based on extension and content"""
+    # Check file extension
+    if not file.lower().endswith(WORKFLOW_FILE_EXTENSIONS):
+        return False
 
-    Args:
-        file: Path to the file to check
-
-    Returns:
-        bool: True if the file is a GitHub workflow file, False otherwise
-    """
-    return file.lower().endswith(WORKFLOW_FILE_EXTENSIONS)
+    # Check if the file contains GitHub Actions workflow content
+    try:
+        with open(file, "r") as f:
+            content = f.read()
+            return "uses:" in content
+    except Exception:
+        return False
 
 
 def _pin_actions_in_workflow_content(content: str) -> str:
@@ -77,15 +79,13 @@ def _pin_actions_in_workflow_content(content: str) -> str:
                     # Keep the original and print a message
                     print(ACTION_SKIP_ERROR.format(action))
                     return match.group(0)
+            else:
+                # Not a GitHub action or already using a different format
+                return match.group(0)
         except Exception as e:
-            # If any error occurs during parsing, keep the original
             print(ACTION_PARSING_ERROR.format(action, e))
-            pass
+            return match.group(0)
 
-        # If the action format is not supported, keep the original
-        return match.group(0)
-
-    # Replace all actions with their pinned versions
     return re.sub(pattern, replace_action, content)
 
 

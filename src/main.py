@@ -3,7 +3,7 @@
 import sys
 from argparse import ArgumentParser, Namespace
 
-from common.constants import (
+from src.common.constants import (
     ACTION_ARG_HELP,
     ACTION_EXAMPLE,
     FILE_ARG_HELP,
@@ -13,8 +13,8 @@ from common.constants import (
     VERSION,
     VERSION_ARG_HELP,
 )
-from editor import pin_action_in_file
-from retriever import get_action_sha, print_pinned_action
+from src.editor import pin_action_in_file
+from src.retriever import get_action_sha, print_pinned_action
 
 
 def parse_args(args=None) -> Namespace:

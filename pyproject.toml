@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gha-pinner"
-version = "0.1.0"
+version = "0.1.2"
 description = "Pin GitHub Actions to specific commit SHAs for improved security"
 authors = ["Samuele Pasini <sapa@bendingspoons.com>"]
 license = "MIT"
