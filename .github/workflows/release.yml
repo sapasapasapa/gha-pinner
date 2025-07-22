@@ -11,7 +11,7 @@ permissions:
   issues: write
 
 jobs:
-  test:
+  test-and-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -43,7 +43,7 @@ jobs:
           poetry run ruff check .
 
   build-and-release:
-    needs: test
+    needs: test-and-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
