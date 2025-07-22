@@ -1,7 +1,5 @@
 # 📌 gha-pinner
 
-![gha-pinner logo](./.github/images/gha-pinner.png)
-
 ## Table of Contents
 
 - [🤔 Why should you pin your GitHub Actions?](#-why-should-you-pin-your-github-actions)
