@@ -1,0 +1,205 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+  issues: write
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.9'
+          
+      - name: Install Poetry
+        uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a # v1
+        with:
+          version: 1.5.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          
+      - name: Install dependencies
+        run: |
+          poetry install --no-interaction
+          
+      - name: Run tests
+        run: |
+          poetry run pytest src/test -v
+          
+      - name: Check code formatting
+        run: |
+          poetry run ruff format --check .
+          poetry run ruff check .
+
+  build-and-release:
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+        
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.9'
+          
+      - name: Install Poetry
+        uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a # v1
+        with:
+          version: 1.5.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
+          
+      - name: Update version in pyproject.toml
+        run: |
+          poetry version ${{ steps.version.outputs.version_number }}
+          
+      - name: Update version in constants.py
+        run: |
+          sed -i 's/VERSION = "v[^"]*"/VERSION = "${{ steps.version.outputs.version }}"/' src/common/constants.py
+          
+      - name: Build package
+        run: |
+          poetry build
+          
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@0cb9c9b65d5d1901c1f53e5e66eaf4afd303e70e # v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          body: |
+            ## Changes in ${{ steps.version.outputs.version }}
+            
+            This release was automatically generated.
+            
+            ## Installation
+            
+            ### Using Homebrew
+            ```bash
+            brew install sapasapasapa/tap/gha-pinner
+            ```
+            
+            ### Using pip
+            ```bash
+            pip install gha-pinner
+            ```
+            
+            ### From source
+            ```bash
+            wget https://github.com/sapasapasapa/gha-pinner/archive/${{ steps.version.outputs.version }}.tar.gz
+            tar -xzf ${{ steps.version.outputs.version }}.tar.gz
+            cd gha-pinner-${{ steps.version.outputs.version_number }}
+            poetry install
+            ```
+          
+      - name: Upload wheel to release
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/gha_pinner-${{ steps.version.outputs.version_number }}-py3-none-any.whl
+          asset_name: gha_pinner-${{ steps.version.outputs.version_number }}-py3-none-any.whl
+          asset_content_type: application/zip
+          
+      - name: Upload source tarball to release
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/gha-pinner-${{ steps.version.outputs.version_number }}.tar.gz
+          asset_name: gha-pinner-${{ steps.version.outputs.version_number }}.tar.gz
+          asset_content_type: application/gzip
+
+  update-homebrew:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
+          
+      - name: Calculate SHA256 of source tarball
+        id: sha256
+        run: |
+          URL="https://github.com/sapasapasapa/gha-pinner/archive/${{ steps.version.outputs.version }}.tar.gz"
+          SHA256=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+          
+      - name: Checkout homebrew tap
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: sapasapasapa/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_GH_TOKEN }}
+          path: homebrew-tap
+          
+      - name: Update Homebrew formula
+        run: |
+          cd homebrew-tap
+          
+          # Create or update the formula
+          cat > Formula/gha-pinner.rb << 'EOF'
+          class GhaPinner < Formula
+            include Language::Python::Virtualenv
+          
+            desc "📌 Pin third-party Github Actions using the commit SHA"
+            homepage "https://github.com/sapasapasapa/gha-pinner"
+            url "https://github.com/sapasapasapa/gha-pinner/archive/${{ steps.version.outputs.version }}.tar.gz"
+            sha256 "${{ steps.sha256.outputs.sha256 }}"
+            license "MIT"
+            head "https://github.com/sapasapasapa/gha-pinner.git", branch: "master"
+          
+            depends_on "python@3.9"
+          
+            resource "requests" do
+              url "https://files.pythonhosted.org/packages/63/70/2bf7780ad2d390a8d301ad0b550f1581eadbd9a20f896afe06353c2a2913/requests-2.32.3.tar.gz"
+              sha256 "55365417734eb18255590a9f9a0bb3a9e1da89e73c8b3e6e24f8b8f6d1b8c6e2"
+            end
+          
+            def install
+              virtualenv_install_with_resources
+            end
+          
+            test do
+              assert_match "gha-pinner ${{ steps.version.outputs.version }}", shell_output("#{bin}/gha-pinner --version")
+            end
+          end
+          EOF
+          
+      - name: Commit and push changes
+        run: |
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/gha-pinner.rb
+          git commit -m "Update gha-pinner to ${{ steps.version.outputs.version }}"
+          git push 
