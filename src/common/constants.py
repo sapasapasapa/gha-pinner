@@ -16,14 +16,20 @@ FILE_ARG_HELP = "📄 The file in which to pin the actions (e.g., 'path/to/file.
 NO_ACTION_ERROR = "❌ No GitHub Action specified. Use -a/--action to specify an action."
 ACTION_EXAMPLE = "💡 Example: gha-pinner -a actions/checkout@v3"
 INVALID_ACTION_FORMAT_ERROR = "❌ Error: Invalid action format: {}"
-EXPECTED_FORMAT_MESSAGE = "💡 Expected format: owner/repo@ref (e.g., actions/checkout@v3)"
+EXPECTED_FORMAT_MESSAGE = (
+    "💡 Expected format: owner/repo@ref (e.g., actions/checkout@v3)"
+)
 ERROR_RETRIEVING_SHA = "❌ Error retrieving SHA for {}: {}"
 ERROR_RETRIEVING_LATEST_RELEASE = "❌ Error retrieving latest release for {}/{}: {}"
-PRIVATE_OR_INVALID_ACTION_ERROR = "🔒 Action '{}' might be private or invalid. Skipping."
+PRIVATE_OR_INVALID_ACTION_ERROR = (
+    "🔒 Action '{}' might be private or invalid. Skipping."
+)
 FILE_NOT_FOUND_ERROR = "❌ Error: File '{}' does not exist."
 NOT_WORKFLOW_FILE_ERROR = "❌ Error: File '{}' is not a GitHub workflow file. Only .yml or .yaml files with GitHub Actions content are supported."
 ERROR_PROCESSING_FILE = "❌ Error processing file '{}': {}"
-ACTION_SKIP_ERROR = "🔒 Skipping action '{}': Unable to retrieve SHA (might be private or invalid)"
+ACTION_SKIP_ERROR = (
+    "🔒 Skipping action '{}': Unable to retrieve SHA (might be private or invalid)"
+)
 ACTION_PARSING_ERROR = "❌ Error parsing action '{}': {}"
 SUCCESS_PIN_MESSAGE = "✅ Successfully pinned actions in '{}'"
 UNABLE_TO_PIN_ACTION = "🔒 Unable to pin action: {} (might be private or invalid)"

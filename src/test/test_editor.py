@@ -3,9 +3,10 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
+from src.common.constants import ERROR_PROCESSING_FILE, FILE_NOT_FOUND_ERROR
 from src.editor import (
-    _is_sha_reference,
     _is_github_workflow_file,
+    _is_sha_reference,
     _pin_actions_in_workflow_content,
     pin_action_in_file,
 )
@@ -239,7 +240,7 @@ def test_pin_action_in_file_not_exists() -> None:
     ):
         pin_action_in_file("nonexistent.yml")
         mock_print.assert_called_once_with(
-            "Error: File 'nonexistent.yml' does not exist."
+            FILE_NOT_FOUND_ERROR.format("nonexistent.yml")
         )
 
 
@@ -251,7 +252,7 @@ def test_pin_action_in_file_exception() -> None:
     ):
         pin_action_in_file("workflow.yml")
         mock_print.assert_called_once_with(
-            "Error processing file 'workflow.yml': Test exception"
+            ERROR_PROCESSING_FILE.format("workflow.yml", "Test exception")
         )
 
 

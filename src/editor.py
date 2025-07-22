@@ -1,18 +1,18 @@
 import os
 import re
 
-from retriever import get_action_sha, get_latest_release_tag
 from common.constants import (
-    SHA_REGEX_PATTERN,
-    WORKFLOW_FILE_EXTENSIONS,
-    WORKFLOW_ACTION_PATTERN,
+    ACTION_PARSING_ERROR,
+    ACTION_SKIP_ERROR,
+    ERROR_PROCESSING_FILE,
     FILE_NOT_FOUND_ERROR,
     NOT_WORKFLOW_FILE_ERROR,
-    ERROR_PROCESSING_FILE,
-    ACTION_SKIP_ERROR,
-    ACTION_PARSING_ERROR,
+    SHA_REGEX_PATTERN,
     SUCCESS_PIN_MESSAGE,
+    WORKFLOW_ACTION_PATTERN,
+    WORKFLOW_FILE_EXTENSIONS,
 )
+from retriever import get_action_sha, get_latest_release_tag
 
 
 def _is_sha_reference(ref: str) -> bool:
@@ -23,10 +23,10 @@ def _is_sha_reference(ref: str) -> bool:
 def _is_github_workflow_file(file: str) -> bool:
     """Check if the file is a GitHub workflow file (yaml/yml with GitHub Actions content).
     For now, we only support yml and yaml files.
-    
+
     Args:
         file: Path to the file to check
-        
+
     Returns:
         bool: True if the file is a GitHub workflow file, False otherwise
     """
