@@ -1,3 +1,2 @@
 - [ ] Integration test
 - [ ] Distribute with pypi and brew
-- [ ] Update docs
