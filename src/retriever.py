@@ -14,6 +14,8 @@ from common.constants import (
     INVALID_ACTION_FORMAT_ERROR,
     ORIGINAL_ACTION_FORMAT,
     PINNED_ACTION_FORMAT,
+    PRIVATE_OR_INVALID_ACTION_ERROR,
+    UNABLE_TO_PIN_ACTION,
 )
 
 
@@ -28,13 +30,7 @@ def _parse_action(action: str) -> tuple[str, str, str]:
     return matched.groups()
 
 
-def _print_pinned_action(action: str, sha: str) -> None:
-    """Print the pinned action"""
-    print(ORIGINAL_ACTION_FORMAT.format(action))
-    print(PINNED_ACTION_FORMAT.format(action.split("@")[0], sha))
-
-
-def _get_latest_release_tag(owner: str, repo: str) -> Optional[str]:
+def get_latest_release_tag(owner: str, repo: str) -> Optional[str]:
     """Get the latest release tag for a repository"""
     api_url: str = GITHUB_API_RELEASES_URL.format(owner, repo)
 
@@ -48,7 +44,7 @@ def _get_latest_release_tag(owner: str, repo: str) -> Optional[str]:
         return None
 
 
-def get_action_sha(action: str) -> None:
+def get_action_sha(action: str) -> Optional[str]:
     """Retrieve the commit SHA for a GitHub Action."""
 
     owner, repo, ref = _parse_action(action)
@@ -58,7 +54,7 @@ def get_action_sha(action: str) -> None:
 
     # Handle @latest tag by fetching the latest release tag
     if ref == "latest":
-        latest_tag = _get_latest_release_tag(owner, repo)
+        latest_tag = get_latest_release_tag(owner, repo)
         if not latest_tag:
             return None
         ref = latest_tag
@@ -70,7 +66,24 @@ def get_action_sha(action: str) -> None:
         response: Response = requests.get(api_url)
         response.raise_for_status()
         data: dict[str, Any] = response.json()
-        _print_pinned_action(action, data.get("sha"))
+        return data.get("sha")
+    except requests.exceptions.HTTPError as e:
+        # Handle 404 errors (private or invalid actions)
+        try:
+            if hasattr(e, "response") and e.response and e.response.status_code == 404:
+                print(PRIVATE_OR_INVALID_ACTION_ERROR.format(action))
+        except AttributeError:
+            print(ERROR_RETRIEVING_SHA.format(action, e))
+        return None
     except requests.exceptions.RequestException as e:
         print(ERROR_RETRIEVING_SHA.format(action, e))
         return None
+
+
+def print_pinned_action(action: str, sha: str) -> None:
+    """Print the pinned action"""
+    print(ORIGINAL_ACTION_FORMAT.format(action))
+    if sha:
+        print(PINNED_ACTION_FORMAT.format(action.split("@")[0], sha))
+    else:
+        print(UNABLE_TO_PIN_ACTION.format(action))

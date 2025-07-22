@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-from src.retriever import _get_latest_release_tag, _parse_action, get_action_sha
+from src.retriever import _parse_action, get_action_sha, get_latest_release_tag
 
 
 @dataclass(frozen=True)
@@ -89,7 +89,7 @@ def test_get_latest_release_tag(test_params: GetLatestReleaseParams) -> None:
     # Mock the requests.get method
     with patch("src.retriever.requests.get", return_value=mock_response):
         # Call the function
-        result = _get_latest_release_tag(test_params.owner, test_params.repo)
+        result = get_latest_release_tag(test_params.owner, test_params.repo)
         assert result == test_params.expected_result
 
 
@@ -161,14 +161,13 @@ def test_get_action_sha(test_params: GetActionShaParams) -> None:
     if test_params.expected_exception:
         mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError()
 
-    # Mock the requests.get method, _parse_action, and _get_latest_release_tag
+    # Mock the requests.get method, _parse_action, and get_latest_release_tag
     with (
         patch("src.retriever.requests.get", return_value=mock_response),
         patch("src.retriever._parse_action", return_value=test_params.parse_result),
         patch(
-            "src.retriever._get_latest_release_tag", return_value=test_params.latest_tag
+            "src.retriever.get_latest_release_tag", return_value=test_params.latest_tag
         ),
-        patch("src.retriever._print_pinned_action") as mock_print,
     ):
         # Call the function
         result = get_action_sha(test_params.action)
@@ -181,9 +180,7 @@ def test_get_action_sha(test_params: GetActionShaParams) -> None:
             assert result is None
         # For successful API call
         elif test_params.mock_status_code == 200 and not test_params.expected_exception:
-            mock_print.assert_called_once_with(
-                test_params.action, test_params.mock_response.get("sha")
-            )
+            assert result == test_params.mock_response.get("sha")
         # For failed API call
         else:
             assert result is None
