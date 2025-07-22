@@ -133,8 +133,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/gha-pinner-${{ steps.version.outputs.version_number }}.tar.gz
-          asset_name: gha-pinner-${{ steps.version.outputs.version_number }}.tar.gz
+          asset_path: ./dist/gha_pinner-${{ steps.version.outputs.version_number }}.tar.gz
+          asset_name: gha_pinner-${{ steps.version.outputs.version_number }}.tar.gz
           asset_content_type: application/gzip
 
   update-homebrew:
