@@ -21,18 +21,9 @@ def _is_sha_reference(ref: str) -> bool:
 
 
 def _is_github_workflow_file(file: str) -> bool:
-    """Check if the file is a GitHub workflow file based on extension and content"""
+    """Check if the file is a GitHub workflow file based on extension"""
     # Check file extension
-    if not file.lower().endswith(WORKFLOW_FILE_EXTENSIONS):
-        return False
-
-    # Check if the file contains GitHub Actions workflow content
-    try:
-        with open(file, "r") as f:
-            content = f.read()
-            return "uses:" in content
-    except Exception:
-        return False
+    return file.lower().endswith(WORKFLOW_FILE_EXTENSIONS)
 
 
 def _pin_actions_in_workflow_content(content: str) -> str:
