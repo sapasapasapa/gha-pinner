@@ -111,6 +111,7 @@ def pin_action_in_file(file: str) -> None:
     except Exception as e:
         print(ERROR_PROCESSING_FILE.format(file, e))
 
+
 def pin_actions_in_dir(dir: str) -> None:
     """Pin the actions in the directory recursively
 

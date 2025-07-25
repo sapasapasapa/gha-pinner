@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from typing import Optional
 
 import typer
 
@@ -66,6 +65,7 @@ def pin_file(
     """
     pin_action_in_file(file)
 
+
 @app.command("dir", help="Process a directory and pin all actions in it.")
 def pin_dir(
     dir: str = typer.Argument(..., help=DIR_ARG_HELP),
@@ -74,6 +74,7 @@ def pin_dir(
     Process a directory and pin all actions in it.
     """
     pin_actions_in_dir(dir)
+
 
 if __name__ == "__main__":
     app()

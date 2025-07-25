@@ -344,24 +344,30 @@ NO_WORKFLOW_FILES_TEST = PinActionsInDirParams(
 )
 def test_pin_actions_in_dir(test_params: PinActionsInDirParams) -> None:
     """Test pin_actions_in_dir with various directory structures."""
-    
+
     def mock_listdir(path):
         return test_params.file_structure.get(path, [])
-    
+
     def mock_isdir(path):
         parts = path.split("/")
         dir_path = "/".join(parts[:-1])
         dirname = parts[-1]
-        return dirname in test_params.file_structure.get(dir_path, []) and path in test_params.file_structure
-    
+        return (
+            dirname in test_params.file_structure.get(dir_path, [])
+            and path in test_params.file_structure
+        )
+
     with (
         patch("os.listdir", side_effect=mock_listdir),
         patch("os.path.isdir", side_effect=mock_isdir),
-        patch("src.editor._is_github_workflow_file", side_effect=lambda f: f.lower().endswith((".yml", ".yaml"))),
+        patch(
+            "src.editor._is_github_workflow_file",
+            side_effect=lambda f: f.lower().endswith((".yml", ".yaml")),
+        ),
         patch("src.editor.pin_action_in_file") as mock_pin_action,
     ):
         pin_actions_in_dir(test_params.directory)
-        
+
         assert mock_pin_action.call_count == len(test_params.expected_calls)
         for call in test_params.expected_calls:
             mock_pin_action.assert_any_call(call)

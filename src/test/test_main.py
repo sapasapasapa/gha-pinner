@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import pytest
 from typer.testing import CliRunner
@@ -63,16 +63,16 @@ def test_command_execution(test_params: CommandTestParams, monkeypatch) -> None:
     if "action" in test_params.args:
         monkeypatch.setattr("src.retriever.get_action_sha", lambda _: "mock-sha")
         monkeypatch.setattr("src.retriever.print_pinned_action", lambda *_: None)
-    
+
     if "file" in test_params.args:
         monkeypatch.setattr("src.editor.pin_action_in_file", lambda _: None)
 
     # Run the command
     result = runner.invoke(app, test_params.args)
-    
+
     # Check exit code
     assert result.exit_code == test_params.expected_exit_code
-    
+
     # Check output if expected
     if test_params.expected_output:
         assert test_params.expected_output in result.stdout
