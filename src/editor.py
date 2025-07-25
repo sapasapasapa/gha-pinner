@@ -110,3 +110,15 @@ def pin_action_in_file(file: str) -> None:
 
     except Exception as e:
         print(ERROR_PROCESSING_FILE.format(file, e))
+
+def pin_actions_in_dir(dir: str) -> None:
+    """Pin the actions in the directory recursively
+
+    Args:
+        dir: Path to the directory
+    """
+    for file in os.listdir(dir):
+        if _is_github_workflow_file(file):
+            pin_action_in_file(os.path.join(dir, file))
+        elif os.path.isdir(os.path.join(dir, file)):
+            pin_actions_in_dir(os.path.join(dir, file))

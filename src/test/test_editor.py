@@ -9,6 +9,7 @@ from src.editor import (
     _is_sha_reference,
     _pin_actions_in_workflow_content,
     pin_action_in_file,
+    pin_actions_in_dir,
 )
 
 
@@ -282,3 +283,85 @@ def test_is_github_workflow_file(file: str, expected: bool) -> None:
     """Test the _is_github_workflow_file function with various file paths."""
     result = _is_github_workflow_file(file)
     assert result == expected
+
+
+@dataclass(frozen=True)
+class PinActionsInDirParams:
+    directory: str
+    file_structure: dict
+    expected_calls: list
+
+
+RECURSIVE_DIR_TEST = PinActionsInDirParams(
+    directory="/test_dir",
+    file_structure={
+        "/test_dir": ["workflow.yml", "other.txt", "subdir"],
+        "/test_dir/subdir": ["nested_workflow.yml", "nested.txt"],
+    },
+    expected_calls=[
+        "/test_dir/workflow.yml",
+        "/test_dir/subdir/nested_workflow.yml",
+    ],
+)
+
+FLAT_DIR_TEST = PinActionsInDirParams(
+    directory="/test_dir",
+    file_structure={
+        "/test_dir": ["workflow.yml", "workflow.yaml", "other.txt"],
+    },
+    expected_calls=[
+        "/test_dir/workflow.yml",
+        "/test_dir/workflow.yaml",
+    ],
+)
+
+EMPTY_DIR_TEST = PinActionsInDirParams(
+    directory="/empty_dir",
+    file_structure={
+        "/empty_dir": [],
+    },
+    expected_calls=[],
+)
+
+NO_WORKFLOW_FILES_TEST = PinActionsInDirParams(
+    directory="/no_workflows",
+    file_structure={
+        "/no_workflows": ["text.txt", "doc.md", "subdir"],
+        "/no_workflows/subdir": ["nested.txt"],
+    },
+    expected_calls=[],
+)
+
+
+@pytest.mark.parametrize(
+    "test_params",
+    [
+        RECURSIVE_DIR_TEST,
+        FLAT_DIR_TEST,
+        EMPTY_DIR_TEST,
+        NO_WORKFLOW_FILES_TEST,
+    ],
+)
+def test_pin_actions_in_dir(test_params: PinActionsInDirParams) -> None:
+    """Test pin_actions_in_dir with various directory structures."""
+    
+    def mock_listdir(path):
+        return test_params.file_structure.get(path, [])
+    
+    def mock_isdir(path):
+        parts = path.split("/")
+        dir_path = "/".join(parts[:-1])
+        dirname = parts[-1]
+        return dirname in test_params.file_structure.get(dir_path, []) and path in test_params.file_structure
+    
+    with (
+        patch("os.listdir", side_effect=mock_listdir),
+        patch("os.path.isdir", side_effect=mock_isdir),
+        patch("src.editor._is_github_workflow_file", side_effect=lambda f: f.lower().endswith((".yml", ".yaml"))),
+        patch("src.editor.pin_action_in_file") as mock_pin_action,
+    ):
+        pin_actions_in_dir(test_params.directory)
+        
+        assert mock_pin_action.call_count == len(test_params.expected_calls)
+        for call in test_params.expected_calls:
+            mock_pin_action.assert_any_call(call)

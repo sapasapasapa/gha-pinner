@@ -44,10 +44,10 @@ Ready to lock down your workflows? Here's how you can use `gha-pinner`.
 
 **Pin a single action:**
 
-To get the commit SHA for a specific action, you can use the `-a` or `--action` flag:
+To get the commit SHA for a specific action, use the `action` subcommand:
 
 ```bash
-$ gha-pinner --action actions/checkout@v3
+$ gha-pinner action actions/checkout@v3
 Original: actions/checkout@v3
 Pinned:   actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
 ```
@@ -62,10 +62,10 @@ This ensures that you are always using the exact same version of the action, pro
 
 **Pin an entire workflow file:**
 
-To pin all actions in a workflow file, you can use the `-f` or `--file` flag:
+To pin all actions in a workflow file, use the `file` subcommand:
 
 ```bash
-$ gha-pinner --file .github/workflows/ci.yml
+$ gha-pinner file .github/workflows/ci.yml
 ✅ Successfully pinned actions in '.github/workflows/ci.yml'
 ```
 

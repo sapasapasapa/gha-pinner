@@ -1,58 +1,78 @@
-from argparse import Namespace
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 import pytest
+from typer.testing import CliRunner
 
-from src.main import parse_args
+from src.main import app
 
 
 @dataclass(frozen=True)
-class ParseArgsParams:
-    args: list[str]
-    expected_result: list[bool]
+class CommandTestParams:
+    args: List[str]
+    expected_exit_code: int
+    expected_output: Optional[str] = None
 
 
-ACTION_FLAG = ParseArgsParams(
-    args=["-a", "actions/checkout@v3"],
-    expected_result=Namespace(action="actions/checkout@v3", file=None, version=False),
+runner = CliRunner()
+
+# Test cases
+ACTION_COMMAND = CommandTestParams(
+    args=["action", "actions/checkout@v3"],
+    expected_exit_code=0,
 )
-ACTION_LONG_FLAG = ParseArgsParams(
-    args=["--action", "actions/checkout@v3"],
-    expected_result=Namespace(action="actions/checkout@v3", file=None, version=False),
+FILE_COMMAND = CommandTestParams(
+    args=["file", "path/to/file.yml"],
+    expected_exit_code=0,
 )
-FILE_FLAG = ParseArgsParams(
-    args=["-f", "path/to/file.yml"],
-    expected_result=Namespace(action=None, file="path/to/file.yml", version=False),
+VERSION_FLAG = CommandTestParams(
+    args=["--version"],
+    expected_exit_code=0,
+    expected_output="gha-pinner v0.1.0",
 )
-FILE_LONG_FLAG = ParseArgsParams(
-    args=["--file", "path/to/file.yml"],
-    expected_result=Namespace(action=None, file="path/to/file.yml", version=False),
+NO_ARGS = CommandTestParams(
+    args=[],
+    expected_exit_code=1,
 )
-VERSION_FLAG = ParseArgsParams(
-    args=["-v"], expected_result=Namespace(action=None, file=None, version=True)
+NO_FILE_SPECIFIED = CommandTestParams(
+    args=["file"],
+    expected_exit_code=2,  # Typer returns 2 for missing required arguments
+    expected_output="Missing argument 'FILE'",
 )
-VERSION_LONG_FLAG = ParseArgsParams(
-    args=["--version"], expected_result=Namespace(action=None, file=None, version=True)
-)
-MULTIPLE_FLAGS = ParseArgsParams(
-    args=["-a", "actions/checkout@v3", "-v"],
-    expected_result=Namespace(action="actions/checkout@v3", file=None, version=True),
+NO_ACTION_SPECIFIED = CommandTestParams(
+    args=["action"],
+    expected_exit_code=2,  # Typer returns 2 for missing required arguments
+    expected_output="Missing argument 'ACTION'",
 )
 
 
 @pytest.mark.parametrize(
-    "test_args",
+    "test_params",
     [
-        ACTION_FLAG,
-        ACTION_LONG_FLAG,
-        FILE_FLAG,
-        FILE_LONG_FLAG,
+        ACTION_COMMAND,
+        FILE_COMMAND,
         VERSION_FLAG,
-        VERSION_LONG_FLAG,
-        MULTIPLE_FLAGS,
+        NO_ARGS,
+        NO_FILE_SPECIFIED,
+        NO_ACTION_SPECIFIED,
     ],
 )
-def test_parse_args(test_args: ParseArgsParams) -> None:
-    result = parse_args(test_args.args)
-    assert not (result.action is not None and result.file is not None)
-    assert result == test_args.expected_result
+def test_command_execution(test_params: CommandTestParams, monkeypatch) -> None:
+    """Test the CLI command execution with different arguments."""
+    # Mock the functions that would make external API calls
+    if "action" in test_params.args:
+        monkeypatch.setattr("src.retriever.get_action_sha", lambda _: "mock-sha")
+        monkeypatch.setattr("src.retriever.print_pinned_action", lambda *_: None)
+    
+    if "file" in test_params.args:
+        monkeypatch.setattr("src.editor.pin_action_in_file", lambda _: None)
+
+    # Run the command
+    result = runner.invoke(app, test_params.args)
+    
+    # Check exit code
+    assert result.exit_code == test_params.expected_exit_code
+    
+    # Check output if expected
+    if test_params.expected_output:
+        assert test_params.expected_output in result.stdout
