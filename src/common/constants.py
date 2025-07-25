@@ -11,6 +11,7 @@ PROGRAM_DESCRIPTION = "📌 Pin third-party Github Actions using the commit SHA"
 ACTION_ARG_HELP = "🎯 The GitHub Action to pin (e.g., 'actions/checkout@v3')"
 VERSION_ARG_HELP = "🔍 Show gha-pinner's version and exit"
 FILE_ARG_HELP = "📄 The file in which to pin the actions (e.g., 'path/to/file.yml')"
+DIR_ARG_HELP = "📂 The directory in which to pin the actions (e.g., 'path/to/dir')"
 
 # Error and info messages
 NO_ACTION_ERROR = "❌ No GitHub Action specified. Use -a/--action to specify an action."
