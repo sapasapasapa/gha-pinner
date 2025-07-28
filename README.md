@@ -109,7 +109,7 @@ When using the `--validate` flag, the command will exit with a non-zero status c
 
 ## 🔄 Using as a GitHub Action
 
-You can also use `gha-pinner` as a GitHub Action in your workflows to validate or pin your actions. 
+You can use `gha-pinner` as a GitHub Action in your workflows to validate that your actions are properly pinned.
 
 ### Validate Actions in CI/CD
 
@@ -133,7 +133,6 @@ jobs:
         uses: gha-pinner/gha-pinner@v1
         with:
           target: '.github/workflows'
-          validate-only: 'true'
           target-type: 'dir'
 ```
 
