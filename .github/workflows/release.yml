@@ -71,9 +71,24 @@ jobs:
           echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
           echo "major_version=v$(echo ${VERSION#v} | cut -d. -f1)" >> $GITHUB_OUTPUT
           
+      - name: Update version in pyproject.toml
+        run: |
+          poetry version ${{ steps.version.outputs.version_number }}
+          
+      - name: Update version in constants.py
+        run: |
+          sed -i 's/VERSION = "v[^"]*"/VERSION = "${{ steps.version.outputs.version }}"/' src/common/constants.py
+          
       - name: Build package
         run: |
           poetry build
+          
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: ./dist/
+          retention-days: 1
           
       - name: Create GitHub Release
         id: create_release
@@ -161,9 +176,11 @@ jobs:
         run: |
           sed -i 's/VERSION = "v[^"]*"/VERSION = "${{ steps.version.outputs.version }}"/' src/common/constants.py
           
-      - name: Build package
-        run: |
-          poetry build
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-files
+          path: ./dist/
           
       - name: Configure PyPI token
         run: |
@@ -171,7 +188,7 @@ jobs:
           
       - name: Publish to PyPI
         run: |
-          poetry publish 
+          poetry publish --no-build
 
   update-action-major-version:
     needs: build-and-release
