@@ -190,11 +190,11 @@ def pin_actions_in_dir(dir: str, validate_only: bool = False) -> List[Dict[str, 
         
     for file in os.listdir(dir):
         file_path = os.path.join(dir, file)
-        if _is_github_workflow_file(file):
-            actions = pin_action_in_file(file_path, validate_only)
-            all_actions.extend(actions)
-        elif os.path.isdir(file_path):
+        if os.path.isdir(file_path):
             actions = pin_actions_in_dir(file_path, validate_only)
+            all_actions.extend(actions)
+        elif _is_github_workflow_file(file_path):
+            actions = pin_action_in_file(file_path, validate_only)
             all_actions.extend(actions)
             
     return all_actions
