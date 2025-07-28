@@ -9,13 +9,13 @@ on:
 
 jobs:
   pin-actions:
-      runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
       - name: Validate GitHub Actions
-        uses: gha-pinner/gha-pinner@v1
+        uses: sapasapasapa/gha-pinner@v0.1.6
         with:
           target: '.github/workflows'
-          validate-only: 'true'
           target-type: 'dir'
+          create-pr: true
