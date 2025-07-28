@@ -28,7 +28,7 @@ FILE_COMMAND = CommandTestParams(
 VERSION_FLAG = CommandTestParams(
     args=["--version"],
     expected_exit_code=0,
-    expected_output="gha-pinner v0.1.0",
+    expected_output="gha-pinner v0.1.6",
 )
 NO_ARGS = CommandTestParams(
     args=[],

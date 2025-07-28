@@ -4,7 +4,7 @@ Constants used throughout the application.
 
 # Program information
 PROGRAM_NAME = "gha-pinner"
-VERSION = "v0.1.0"
+VERSION = "v0.1.6"
 
 # CLI descriptions and help messages
 PROGRAM_DESCRIPTION = "📌 Pin third-party Github Actions using the commit SHA"
