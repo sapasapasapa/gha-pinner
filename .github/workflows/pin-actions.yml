@@ -17,5 +17,5 @@ jobs:
         uses: sapasapasapa/gha-pinner@v0.1.6
         with:
           target: '.github/workflows'
-          validate-only: 'true'
           target-type: 'dir'
+          create-pr: true

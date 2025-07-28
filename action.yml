@@ -10,14 +10,27 @@ inputs:
     description: 'File or directory to validate or pin actions in'
     required: true
     default: '.github/workflows'
-  validate-only:
-    description: 'Only validate actions without modifying files'
-    required: false
-    default: 'true'
   target-type:
     description: 'Type of target (file or dir)'
     required: false
     default: 'dir'
+    enum: ['file', 'dir']
+  create-pr:
+    description: 'Create a pull request with the changes'
+    required: false
+    default: false
+  pr-title:
+    description: 'Title for the pull request'
+    required: false
+    default: 'Pin GitHub Actions to commit SHAs'
+  pr-branch:
+    description: 'Branch name for the pull request'
+    required: false
+    default: 'gha-pinner/pin-actions'
+  pr-body:
+    description: 'Body for the pull request'
+    required: false
+    default: 'This PR pins GitHub Actions to specific commit SHAs for improved security.'
 
 runs:
   using: 'composite'
@@ -36,9 +49,48 @@ runs:
     - name: Run gha-pinner
       shell: bash
       run: |
-        if [[ "${{ inputs.target-type }}" == "file" || "${{ inputs.target-type }}" == "dir" ]]; then
+        if [[ ! ${{ inputs.create-pr }} ]]; then
           gha-pinner ${{ inputs.target-type }} "${{ inputs.target }}" --validate
         else
-          echo "Invalid target type: ${{ inputs.target-type }}"
-          exit 1
+          gha-pinner ${{ inputs.target-type }} "${{ inputs.target }}"
         fi
+
+    - name: Create PR with changes
+      if: ${{ inputs.create-pr }}
+      shell: bash
+      run: |
+        # Check if there are any changes
+        if [[ -z "$(git status --porcelain)" ]]; then
+          echo "No changes detected. Skipping PR creation."
+          exit 0
+        fi
+        
+        # Configure Git
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        
+        # Create a new branch
+        git checkout -b "${{ inputs.pr-branch }}"
+        
+        # Add and commit changes
+        git add "${{ inputs.target }}"
+        git commit -m "${{ inputs.pr-title }}"
+        
+        # Push changes
+        git push origin "${{ inputs.pr-branch }}" --force
+        
+        # Create PR using GitHub CLI if available, otherwise use the API
+        if command -v gh &> /dev/null; then
+          echo "Creating PR using GitHub CLI"
+          gh pr create --title "${{ inputs.pr-title }}" --body "${{ inputs.pr-body }}" --base "${GITHUB_REF##*/}"
+        else
+          echo "Creating PR using GitHub API"
+          PR_DATA="{\"title\":\"${{ inputs.pr-title }}\",\"body\":\"${{ inputs.pr-body }}\",\"head\":\"${{ inputs.pr-branch }}\",\"base\":\"${GITHUB_REF##*/}\"}"
+          curl -X POST \
+            -H "Authorization: token ${{ github.token }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls" \
+            -d "$PR_DATA"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
