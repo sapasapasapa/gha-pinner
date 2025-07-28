@@ -31,7 +31,7 @@ runs:
     - name: Install gha-pinner
       shell: bash
       run: |
-        pip install -e ${{ github.action_path }}
+        pip install ${{ github.action_path }}
 
     - name: Run gha-pinner
       shell: bash
