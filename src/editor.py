@@ -2,21 +2,21 @@ import os
 import re
 from typing import Dict, List, Tuple
 
+from src.common.action_status import ActionStatus
 from src.common.constants import (
     ACTION_PARSING_ERROR,
     ACTION_SKIP_ERROR,
     ERROR_PROCESSING_FILE,
     FILE_NOT_FOUND_ERROR,
+    NEEDS_PINNING_FORMAT,
     NOT_WORKFLOW_FILE_ERROR,
     SHA_REGEX_PATTERN,
     SUCCESS_PIN_MESSAGE,
     SUCCESS_VALIDATION_MESSAGE,
     WORKFLOW_ACTION_PATTERN,
     WORKFLOW_FILE_EXTENSIONS,
-    NEEDS_PINNING_FORMAT,
 )
 from src.retriever import get_action_sha, get_latest_release_tag
-from src.common.action_status import ActionStatus
 
 
 def _is_sha_reference(ref: str) -> bool:
@@ -30,13 +30,15 @@ def _is_github_workflow_file(file: str) -> bool:
     return file.lower().endswith(WORKFLOW_FILE_EXTENSIONS)
 
 
-def _process_actions_in_workflow_content(content: str, validate_only: bool = False) -> Tuple[str, List[Dict[str, str]]]:
+def _process_actions_in_workflow_content(
+    content: str, validate_only: bool = False
+) -> Tuple[str, List[Dict[str, str]]]:
     """Process actions in the workflow content
-    
+
     Args:
         content: The workflow file content
         validate_only: If True, only validate actions without modifying content
-        
+
     Returns:
         Tuple containing:
         - Updated content (or original if validate_only=True)
@@ -59,11 +61,13 @@ def _process_actions_in_workflow_content(content: str, validate_only: bool = Fal
 
                 # Skip if already pinned with SHA
                 if _is_sha_reference(ref):
-                    actions_found.append({
-                        "action": action,
-                        "status": ActionStatus.ALREADY_PINNED,
-                        "sha": ref
-                    })
+                    actions_found.append(
+                        {
+                            "action": action,
+                            "status": ActionStatus.ALREADY_PINNED,
+                            "sha": ref,
+                        }
+                    )
                     return match.group(0)
 
                 # Store the original ref for comment
@@ -84,13 +88,15 @@ def _process_actions_in_workflow_content(content: str, validate_only: bool = Fal
 
                 if sha:
                     # Add to found actions
-                    actions_found.append({
-                        "action": action,
-                        "status": ActionStatus.NEEDS_PINNING,
-                        "original_ref": original_ref,
-                        "sha": sha
-                    })
-                    
+                    actions_found.append(
+                        {
+                            "action": action,
+                            "status": ActionStatus.NEEDS_PINNING,
+                            "original_ref": original_ref,
+                            "sha": sha,
+                        }
+                    )
+
                     # Replace the reference with the SHA and append the original version as a comment
                     if validate_only:
                         return match.group(0)
@@ -98,28 +104,30 @@ def _process_actions_in_workflow_content(content: str, validate_only: bool = Fal
                         return f"{indent}{action_base}@{sha} # {original_ref}"
                 else:
                     # If we couldn't get the SHA, it might be a private action or there was an error
-                    actions_found.append({
-                        "action": action,
-                        "status": ActionStatus.ERROR,
-                        "message": "Unable to retrieve SHA"
-                    })
+                    actions_found.append(
+                        {
+                            "action": action,
+                            "status": ActionStatus.ERROR,
+                            "message": "Unable to retrieve SHA",
+                        }
+                    )
                     # Keep the original and print a message
                     print(ACTION_SKIP_ERROR.format(action))
                     return match.group(0)
             else:
                 # Not a GitHub action or already using a different format
-                actions_found.append({
-                    "action": action,
-                    "status": ActionStatus.SKIPPED,
-                    "message": "Not a standard GitHub action format"
-                })
+                actions_found.append(
+                    {
+                        "action": action,
+                        "status": ActionStatus.SKIPPED,
+                        "message": "Not a standard GitHub action format",
+                    }
+                )
                 return match.group(0)
         except Exception as e:
-            actions_found.append({
-                "action": action,
-                "status": ActionStatus.ERROR,
-                "message": str(e)
-            })
+            actions_found.append(
+                {"action": action, "status": ActionStatus.ERROR, "message": str(e)}
+            )
             print(ACTION_PARSING_ERROR.format(action, e))
             return match.group(0)
 
@@ -133,12 +141,12 @@ def pin_action_in_file(file: str, validate_only: bool = False) -> List[Dict[str,
     Args:
         file: Path to the GitHub Action workflow file
         validate_only: If True, only validate actions without modifying file
-        
+
     Returns:
         List of actions found with their details
     """
     actions_found = []
-    
+
     if not os.path.exists(file):
         print(FILE_NOT_FOUND_ERROR.format(file))
         return actions_found
@@ -153,7 +161,9 @@ def pin_action_in_file(file: str, validate_only: bool = False) -> List[Dict[str,
             content = f.read()
 
         # Process actions in the content
-        updated_content, actions_found = _process_actions_in_workflow_content(content, validate_only)
+        updated_content, actions_found = _process_actions_in_workflow_content(
+            content, validate_only
+        )
 
         if not validate_only:
             # Write the updated content back to the file
@@ -163,7 +173,13 @@ def pin_action_in_file(file: str, validate_only: bool = False) -> List[Dict[str,
         else:
             for action in actions_found:
                 if action["status"] == ActionStatus.NEEDS_PINNING:
-                    print(NEEDS_PINNING_FORMAT.format(action['action'], action['action'].split('@')[0], action['sha']))
+                    print(
+                        NEEDS_PINNING_FORMAT.format(
+                            action["action"],
+                            action["action"].split("@")[0],
+                            action["sha"],
+                        )
+                    )
             print(SUCCESS_VALIDATION_MESSAGE.format(file))
 
     except Exception as e:
@@ -178,16 +194,16 @@ def pin_actions_in_dir(dir: str, validate_only: bool = False) -> List[Dict[str, 
     Args:
         dir: Path to the directory
         validate_only: If True, only validate actions without modifying files
-        
+
     Returns:
         List of actions found with their details
     """
     all_actions = []
-    
+
     if not os.path.exists(dir):
         print(FILE_NOT_FOUND_ERROR.format(dir))
         return all_actions
-        
+
     for file in os.listdir(dir):
         file_path = os.path.join(dir, file)
         if os.path.isdir(file_path):
@@ -196,5 +212,5 @@ def pin_actions_in_dir(dir: str, validate_only: bool = False) -> List[Dict[str, 
         elif _is_github_workflow_file(file_path):
             actions = pin_action_in_file(file_path, validate_only)
             all_actions.extend(actions)
-            
+
     return all_actions

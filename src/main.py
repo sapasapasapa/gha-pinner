@@ -2,8 +2,10 @@
 
 
 import sys
+
 import typer
 
+from src.common.action_status import ActionStatus
 from src.common.constants import (
     ACTION_ARG_HELP,
     DIR_ARG_HELP,
@@ -14,7 +16,6 @@ from src.common.constants import (
     VERSION,
     VERSION_ARG_HELP,
 )
-from src.common.action_status import ActionStatus
 from src.editor import pin_action_in_file, pin_actions_in_dir
 from src.retriever import get_action_sha, print_pinned_action
 
@@ -73,9 +74,11 @@ def pin_file(
     Process a workflow file and pin all actions in it.
     """
     actions_found = pin_action_in_file(file, validate)
-    
+
     # Exit with non-zero code if validation is enabled and unpinned actions are found
-    if validate and any(action["status"] == ActionStatus.NEEDS_PINNING for action in actions_found):
+    if validate and any(
+        action["status"] == ActionStatus.NEEDS_PINNING for action in actions_found
+    ):
         sys.exit(1)
 
 
@@ -93,9 +96,11 @@ def pin_dir(
     Process a directory and pin all actions in it.
     """
     actions_found = pin_actions_in_dir(dir, validate)
-    
+
     # Exit with non-zero code if validation is enabled and unpinned actions are found
-    if validate and any(action["status"] == ActionStatus.NEEDS_PINNING for action in actions_found):
+    if validate and any(
+        action["status"] == ActionStatus.NEEDS_PINNING for action in actions_found
+    ):
         sys.exit(1)
 
 

@@ -5,7 +5,6 @@ import pytest
 from typer.testing import CliRunner
 
 from src.main import app
-from src.common.action_status import ActionStatus
 
 
 @dataclass(frozen=True)
