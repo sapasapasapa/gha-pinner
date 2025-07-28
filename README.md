@@ -7,6 +7,7 @@
 - [📦 Installation](#-installation)
 - [🛠️ Usage](#️-usage)
 - [🔄 Using as a GitHub Action](#-using-as-a-github-action)
+- [👨‍💻 For Maintainers](#-for-maintainers)
 
 ## 🤔 Why should you pin your GitHub Actions?
 
@@ -137,3 +138,31 @@ jobs:
 ```
 
 This will fail the workflow if any actions are not properly pinned, ensuring your team follows security best practices.
+
+## 👨‍💻 For Maintainers
+
+### Release Process
+
+This project uses a dual release mechanism to publish both a PyPI package and a GitHub Action:
+
+1. **Creating a Release**:
+   - To create a new release, push a tag in the format `v{major}.{minor}.{patch}` (e.g., `v1.2.3`)
+   - This will trigger the release workflow
+
+2. **What Happens During Release**:
+   - Tests and linting are run
+   - The package is built and published to PyPI
+   - A GitHub Release is created with the version tag (e.g., `v1.2.3`)
+   - A major version tag (e.g., `v1`) is automatically created/updated to point to the latest release
+
+3. **Version References**:
+   - For PyPI and specific version references, use the full version tag (e.g., `v1.2.3`)
+   - For GitHub Action references in workflows, use the major version tag (e.g., `v1`)
+
+Example:
+```yaml
+- name: Pin GitHub Actions
+  uses: sapasapasapa/gha-pinner@v1  # This will always use the latest v1.x.x release
+```
+
+This approach ensures that users of the GitHub Action automatically get the latest patch and minor updates while maintaining compatibility, while also allowing specific version pinning for those who need it.
