@@ -12,6 +12,7 @@ ACTION_ARG_HELP = "🎯 The GitHub Action to pin (e.g., 'actions/checkout@v3')"
 VERSION_ARG_HELP = "🔍 Show gha-pinner's version and exit"
 FILE_ARG_HELP = "📄 The file in which to pin the actions (e.g., 'path/to/file.yml')"
 DIR_ARG_HELP = "📂 The directory in which to pin the actions (e.g., 'path/to/dir')"
+VALIDATE_ARG_HELP = "🔍 Validate actions without modifying files"
 
 # Error and info messages
 NO_ACTION_ERROR = "❌ No GitHub Action specified. Use -a/--action to specify an action."
@@ -33,11 +34,13 @@ ACTION_SKIP_ERROR = (
 )
 ACTION_PARSING_ERROR = "❌ Error parsing action '{}': {}"
 SUCCESS_PIN_MESSAGE = "✅ Successfully pinned actions in '{}'"
+SUCCESS_VALIDATION_MESSAGE = "✅ Successfully validated actions in '{}'"
 UNABLE_TO_PIN_ACTION = "🔒 Unable to pin action: {} (might be private or invalid)"
 
 # Output formats
 ORIGINAL_ACTION_FORMAT = "Original: {}"
 PINNED_ACTION_FORMAT = "Pinned:   {}@{}"
+NEEDS_PINNING_FORMAT = "❌ - {} should be pinned as {}@{}"
 
 # Regex patterns
 ACTION_REGEX_PATTERN = r"([^/]+)/([^@]+)@(.+)"

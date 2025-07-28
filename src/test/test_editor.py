@@ -3,11 +3,12 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
+from src.common.action_status import ActionStatus
 from src.common.constants import ERROR_PROCESSING_FILE, FILE_NOT_FOUND_ERROR
 from src.editor import (
     _is_github_workflow_file,
     _is_sha_reference,
-    _pin_actions_in_workflow_content,
+    _process_actions_in_workflow_content,
     pin_action_in_file,
     pin_actions_in_dir,
 )
@@ -66,6 +67,7 @@ class PinActionsParams:
     get_sha_returns: dict
     get_latest_tag_returns: dict
     expected_result: str
+    validate_only: bool = False
 
 
 ALREADY_PINNED_ACTION = PinActionsParams(
@@ -191,7 +193,7 @@ jobs:
         MULTIPLE_ACTIONS,
     ],
 )
-def test_pin_actions_in_workflow_content(test_params: PinActionsParams) -> None:
+def test_process_actions_in_workflow_content(test_params: PinActionsParams) -> None:
     def mock_get_action_sha(action):
         return test_params.get_sha_returns.get(action)
 
@@ -204,7 +206,9 @@ def test_pin_actions_in_workflow_content(test_params: PinActionsParams) -> None:
             "src.editor.get_latest_release_tag", side_effect=mock_get_latest_release_tag
         ),
     ):
-        result = _pin_actions_in_workflow_content(test_params.content)
+        result, actions_found = _process_actions_in_workflow_content(
+            test_params.content, test_params.validate_only
+        )
         assert result == test_params.expected_result
 
 
@@ -223,15 +227,25 @@ jobs:
     steps:
       - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567 # v3
 """
+    mock_actions_found = [
+        {
+            "action": "actions/checkout@v3",
+            "status": ActionStatus.NEEDS_PINNING,
+            "original_ref": "v3",
+            "sha": "0123456789abcdef0123456789abcdef01234567",
+        }
+    ]
 
     with (
         patch("os.path.exists", return_value=True),
         patch("builtins.open", mock_open(read_data=mock_content)),
         patch(
-            "src.editor._pin_actions_in_workflow_content", return_value=expected_content
+            "src.editor._process_actions_in_workflow_content",
+            return_value=(expected_content, mock_actions_found),
         ),
     ):
-        pin_action_in_file("workflow.yml")
+        result = pin_action_in_file("workflow.yml")
+        assert result == mock_actions_found
 
 
 def test_pin_action_in_file_not_exists() -> None:
@@ -239,10 +253,11 @@ def test_pin_action_in_file_not_exists() -> None:
         patch("os.path.exists", return_value=False),
         patch("builtins.print") as mock_print,
     ):
-        pin_action_in_file("nonexistent.yml")
+        result = pin_action_in_file("nonexistent.yml")
         mock_print.assert_called_once_with(
             FILE_NOT_FOUND_ERROR.format("nonexistent.yml")
         )
+        assert result == []
 
 
 def test_pin_action_in_file_exception() -> None:
@@ -251,10 +266,11 @@ def test_pin_action_in_file_exception() -> None:
         patch("builtins.open", side_effect=Exception("Test exception")),
         patch("builtins.print") as mock_print,
     ):
-        pin_action_in_file("workflow.yml")
+        result = pin_action_in_file("workflow.yml")
         mock_print.assert_called_once_with(
             ERROR_PROCESSING_FILE.format("workflow.yml", "Test exception")
         )
+        assert result == []
 
 
 @dataclass(frozen=True)
@@ -357,17 +373,28 @@ def test_pin_actions_in_dir(test_params: PinActionsInDirParams) -> None:
             and path in test_params.file_structure
         )
 
+    def mock_exists(path):
+        return path in test_params.file_structure
+
+    mock_actions = [{"action": "test-action", "status": ActionStatus.NEEDS_PINNING}]
+
     with (
         patch("os.listdir", side_effect=mock_listdir),
         patch("os.path.isdir", side_effect=mock_isdir),
+        patch("os.path.exists", side_effect=mock_exists),
         patch(
             "src.editor._is_github_workflow_file",
             side_effect=lambda f: f.lower().endswith((".yml", ".yaml")),
         ),
-        patch("src.editor.pin_action_in_file") as mock_pin_action,
+        patch(
+            "src.editor.pin_action_in_file", return_value=mock_actions
+        ) as mock_pin_action,
     ):
-        pin_actions_in_dir(test_params.directory)
+        result = pin_actions_in_dir(test_params.directory)
 
         assert mock_pin_action.call_count == len(test_params.expected_calls)
         for call in test_params.expected_calls:
-            mock_pin_action.assert_any_call(call)
+            mock_pin_action.assert_any_call(call, False)
+
+        # Check that the result contains the expected number of actions
+        assert len(result) == len(test_params.expected_calls) * len(mock_actions)

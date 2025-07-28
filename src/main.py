@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 
 
+import sys
+
 import typer
 
+from src.common.action_status import ActionStatus
 from src.common.constants import (
     ACTION_ARG_HELP,
     DIR_ARG_HELP,
     FILE_ARG_HELP,
     PROGRAM_DESCRIPTION,
     PROGRAM_NAME,
+    VALIDATE_ARG_HELP,
     VERSION,
     VERSION_ARG_HELP,
 )
@@ -59,21 +63,45 @@ def pin_action(
 @app.command("file", help="Process a workflow file and pin all actions in it.")
 def pin_file(
     file: str = typer.Argument(..., help=FILE_ARG_HELP),
+    validate: bool = typer.Option(
+        False,
+        "--validate",
+        help=VALIDATE_ARG_HELP,
+        is_flag=True,
+    ),
 ) -> None:
     """
     Process a workflow file and pin all actions in it.
     """
-    pin_action_in_file(file)
+    actions_found = pin_action_in_file(file, validate)
+
+    # Exit with non-zero code if validation is enabled and unpinned actions are found
+    if validate and any(
+        action["status"] == ActionStatus.NEEDS_PINNING for action in actions_found
+    ):
+        sys.exit(1)
 
 
 @app.command("dir", help="Process a directory and pin all actions in it.")
 def pin_dir(
     dir: str = typer.Argument(..., help=DIR_ARG_HELP),
+    validate: bool = typer.Option(
+        False,
+        "--validate",
+        help=VALIDATE_ARG_HELP,
+        is_flag=True,
+    ),
 ) -> None:
     """
     Process a directory and pin all actions in it.
     """
-    pin_actions_in_dir(dir)
+    actions_found = pin_actions_in_dir(dir, validate)
+
+    # Exit with non-zero code if validation is enabled and unpinned actions are found
+    if validate and any(
+        action["status"] == ActionStatus.NEEDS_PINNING for action in actions_found
+    ):
+        sys.exit(1)
 
 
 if __name__ == "__main__":

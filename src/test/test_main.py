@@ -65,7 +65,12 @@ def test_command_execution(test_params: CommandTestParams, monkeypatch) -> None:
         monkeypatch.setattr("src.retriever.print_pinned_action", lambda *_: None)
 
     if "file" in test_params.args:
-        monkeypatch.setattr("src.editor.pin_action_in_file", lambda _: None)
+        # Mock the pin_action_in_file function to return an empty list of actions
+        monkeypatch.setattr("src.editor.pin_action_in_file", lambda *_: [])
+
+    if "dir" in test_params.args:
+        # Mock the pin_actions_in_dir function to return an empty list of actions
+        monkeypatch.setattr("src.editor.pin_actions_in_dir", lambda *_: [])
 
     # Run the command
     result = runner.invoke(app, test_params.args)

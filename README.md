@@ -6,6 +6,7 @@
 - [🚀 What does `gha-pinner` do?](#-what-does-gha-pinner-do)
 - [📦 Installation](#-installation)
 - [🛠️ Usage](#️-usage)
+- [🔄 Using as a GitHub Action](#-using-as-a-github-action)
 
 ## 🤔 Why should you pin your GitHub Actions?
 
@@ -92,3 +93,47 @@ $ gha-pinner dir .github/workflows
 ```
 
 This will scan the specified directory recursively, finding all workflow files (`.yml` and `.yaml` files), and pin all actions in each file. It's a convenient way to secure all your workflows at once.
+
+**Validate actions without modifying files:**
+
+To check if all actions in your workflows are properly pinned without modifying any files, use the `--validate` flag:
+
+```bash
+$ gha-pinner dir .github/workflows --validate
+❌ - actions/checkout@v3 should be pinned as actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
+✅ Successfully validated actions in '.github/workflows/ci.yml'
+```
+
+When using the `--validate` flag, the command will exit with a non-zero status code if any actions need pinning, making it perfect for CI/CD pipelines.
+
+## 🔄 Using as a GitHub Action
+
+You can also use `gha-pinner` as a GitHub Action in your workflows to validate or pin your actions. 
+
+### Validate Actions in CI/CD
+
+Add this to your workflow to validate that all actions are properly pinned:
+
+```yaml
+name: Validate Actions
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate GitHub Actions
+        uses: gha-pinner/gha-pinner@v1
+        with:
+          target: '.github/workflows'
+          validate-only: 'true'
+          target-type: 'dir'
+```
+
+This will fail the workflow if any actions are not properly pinned, ensuring your team follows security best practices.
