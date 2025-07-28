@@ -1,0 +1,44 @@
+name: 'GitHub Actions Pinner'
+description: 'Validate or pin GitHub Actions to specific commit SHAs for improved security'
+author: 'gha-pinner'
+branding:
+  icon: 'anchor'
+  color: 'blue'
+
+inputs:
+  target:
+    description: 'File or directory to validate or pin actions in'
+    required: true
+    default: '.github/workflows'
+  validate-only:
+    description: 'Only validate actions without modifying files'
+    required: false
+    default: 'true'
+  target-type:
+    description: 'Type of target (file or dir)'
+    required: false
+    default: 'dir'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install gha-pinner
+      shell: bash
+      run: |
+        pip install -e ${{ github.action_path }}
+
+    - name: Run gha-pinner
+      shell: bash
+      run: |
+        if [[ "${{ inputs.target-type }}" == "file" || "${{ inputs.target-type }}" == "dir" ]]; then
+          gha-pinner ${{ inputs.target-type }} "${{ inputs.target }}" --validate
+        else
+          echo "Invalid target type: ${{ inputs.target-type }}"
+          exit 1
+        fi
