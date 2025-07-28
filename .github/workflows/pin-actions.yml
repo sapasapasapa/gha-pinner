@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Validate GitHub Actions
-        uses: sapasapasapa/gha-pinner@v0.1.6
+        uses: sapasapasapa/gha-pinner@v1.0.0
         with:
           target: '.github/workflows'
           target-type: 'dir'
