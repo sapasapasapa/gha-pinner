@@ -10,8 +10,13 @@ on:
 jobs:
   pin-actions:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Validate GitHub Actions
         uses: sapasapasapa/gha-pinner@v1.0.0
