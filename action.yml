@@ -30,12 +30,6 @@ runs:
       run: |
         pip install ${{ github.action_path }}
 
-    - name: Validate GitHub Actions
-      shell: bash
-      continue-on-error: true
-      run: |
-        gha-pinner ${{ inputs.target-type }} "${{ inputs.target }}" --validate
-
     - name: Generate suggestions
       if: ${{ github.event_name == 'pull_request' }}
       shell: bash
