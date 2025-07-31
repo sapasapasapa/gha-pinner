@@ -30,7 +30,16 @@ runs:
       run: |
         pip install ${{ github.action_path }}
 
-    - name: Validate GitHub Actions
+    - name: Generate suggestions
+      if: ${{ github.event_name == 'pull_request' }}
       shell: bash
       run: |
-        gha-pinner ${{ inputs.target-type }} "${{ inputs.target }}" --validate
+        gha-pinner ${{ inputs.target-type }} "${{ inputs.target }}"
+
+    - name: Suggest fixes on the PR
+      if: ${{ github.event_name == 'pull_request' }}
+      uses: reviewdog/action-suggester@4747dbc9f9e37adba0943e681cc20db466642158 # v1
+      with:
+        tool_name: gha-pinner
+      env:
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
