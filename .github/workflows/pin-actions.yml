@@ -11,7 +11,7 @@ jobs:
   pin-actions:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
       
       - name: Validate GitHub Actions
         uses: sapasapasapa/gha-pinner@f5dceb3b72945d1efa06f45beb25d36cf559b83b # v1.0.2
